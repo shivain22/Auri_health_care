@@ -11,9 +11,9 @@ services:
       # - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # - SPRING_JPA_SHOW_SQL=true
       - JHIPSTER_SLEEP=0
-      - UPLOAD_PATH=/backend/uploads
+      - UPLOAD_PATH=/D/testData/
     ports:
-      - 127.0.0.1:8080:8080
+      - 8080:8080
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/management/health" ]
       interval: 5s
@@ -23,9 +23,9 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - ./uploads:/backend/uploads
+      - ./uploads:/D/testData/
   frontend:
-    image: shivain22/auri:v3.1
+    image: shivain22/auri:v4
     environment:
       - BACKEND_URL=http://backend:8080
     ports:
@@ -41,7 +41,7 @@ services:
     # If you want to expose these ports outside your dev PC,
     # remove the "127.0.0.1:" prefix
     ports:
-      - 127.0.0.1:3306:3306
+      - 3306:3306
     command: mysqld --lower_case_table_names=1 --skip-ssl --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
     healthcheck:
       test: [ 'CMD', 'mysql', '-e', 'SHOW DATABASES;' ]
