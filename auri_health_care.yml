@@ -1,0 +1,69 @@
+name: auri_health_care
+services:
+  backend:
+    image: shivain22/auri_health_care:backend2
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev,api-docs
+      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/auri_health_care?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+      - SPRING_LIQUIBASE_URL=jdbc:mysql://mysql:3306/auri_health_care?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&createDatabaseIfNotExist=true
+      # - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # - SPRING_JPA_SHOW_SQL=true
+      - JHIPSTER_SLEEP=0
+      - UPLOAD_PATH=/backend/uploads
+    ports:
+      - 127.0.0.1:8080:8080
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/management/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/backend/uploads
+  frontend:
+    image: shivain22/auri:v3.1
+    environment:
+      - BACKEND_URL=http://backend:8080
+    ports:
+      - 9060:9060
+  mysql:
+    image: mysql:8.2.0
+    volumes:
+      - ./mysqlConfig:/etc/mysql/conf.d
+#      - ~/volumes/jhipster/auri_health_care/mysql/:/var/lib/mysql/
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=auri_health_care
+    # If you want to expose these ports outside your dev PC,
+    # remove the "127.0.0.1:" prefix
+    ports:
+      - 127.0.0.1:3306:3306
+    command: mysqld --lower_case_table_names=1 --skip-ssl --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
+    healthcheck:
+      test: [ 'CMD', 'mysql', '-e', 'SHOW DATABASES;' ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  jhipster-control-center:
+    image: 'jhipster/jhipster-control-center:v0.5.0'
+    command:
+      - /bin/sh
+      - -c
+      # Patch /etc/hosts to support resolving host.docker.internal to the internal IP address used by the host in all OSes
+      - echo "`ip route | grep default | cut -d ' ' -f3` host.docker.internal" | tee -a /etc/hosts > /dev/null && java -jar /jhipster-control-center.jar
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - SPRING_PROFILES_ACTIVE=dev,api-docs,static
+      - SPRING_SECURITY_USER_PASSWORD=admin
+      # The token should have the same value than the one declared in you Spring configuration under the jhipster.security.authentication.jwt.base64-secret configuration's entry
+      - JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET=NzU2NmQyNGU1MTgzYzVlNThjMjdiOTNiYWJhODRlNmYyZDhmOWViYmEzZWEyOWQzNzM2ZWFmMTBlNDVkNWYzODFjNWY1ZDIwMGYxOGU3MmUyMTdmYWU2OWI5ODUzN2U0YWJiMjBkY2QyOWNlYWUwOGZiM2U4MDQ4Y2Y2MmVjZDY=
+      - SPRING_CLOUD_DISCOVERY_CLIENT_SIMPLE_INSTANCES_AURI_HEALTH_CARE_0_URI=http://host.docker.internal:8080
+      - LOGGING_FILE_NAME=/tmp/jhipster-control-center.log
+    # If you want to expose these ports outside your dev PC,
+    # remove the "127.0.0.1:" prefix
+    ports:
+      - 7419:7419
